@@ -6,6 +6,3 @@ data class MovieResponse
 (
     @SerializedName("results") val movieList : List<Movie>
 )
-{
-
-}
