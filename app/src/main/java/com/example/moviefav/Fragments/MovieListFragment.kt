@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moviefav.Classes.*
+import com.example.moviefav.MainActivity
 import com.example.moviefav.R
 import retrofit2.Call
 import retrofit2.Callback

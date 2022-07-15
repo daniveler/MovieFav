@@ -9,6 +9,6 @@
     <string name="LoremIpsum">Description of the movie. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas varius urna felis, sit amet pellentesque metus ultricies eu. Etiam vitae suscipit nulla. Curabitur aliquet ultrices ligula et elementum. Praesent gravida gravida aliquet. Praesent varius aliquet consectetur. Quisque vitae justo enim. Phasellus at leo a ex ornare finibus. Nam venenatis molestie tellus, at rhoncus est posuere in. Cras pulvinar et elit vel interdum. Nulla vitae rutrum odio, et posuere nibh.</string>
 
     <!--> FRAGMENT MOVIE LIST <!-->
-    <string name="tvFragmentMovieList">Películas Populares</string>
+    <string name="titleFragmentMovieList">Películas Populares</string>
 
 </resources>

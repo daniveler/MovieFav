@@ -11,8 +11,10 @@ import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moviefav.R
 import com.squareup.picasso.Picasso
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 import kotlin.coroutines.coroutineContext
 
 class MovieListItemAdapter(val movieList : List<Movie>) : RecyclerView.Adapter<MovieListItemAdapter.MovieViewHolder>()
@@ -32,9 +34,16 @@ class MovieListItemAdapter(val movieList : List<Movie>) : RecyclerView.Adapter<M
         holder.tvDescription.setText(movie.description)
         holder.tvScore.setText("" + movie.score + " ⭐")
 
-        //val date = LocalDateTime.parse(movie.relaseDate)
-        //val dateFormated = date.format(DateTimeFormatter.ofPattern("dd MMMM, yyyy"))
-        holder.tvReleaseDate.setText(movie.relaseDate)
+        val spanishLocale = Locale("es", "ES")
+
+        val apiFormat       = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val spanishFormat   = DateTimeFormatter.ofPattern("d MMMM, yyyy", spanishLocale)
+
+        val date = LocalDate.parse(movie.relaseDate, apiFormat)
+
+        val spanishDate = date.format(spanishFormat)
+
+        holder.tvReleaseDate.setText(spanishDate.toString())
     }
 
     override fun getItemCount(): Int
