@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">MovieFav</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="popular_movies_url">https://api.themoviedb.org/3/movie/popular?api_key=975785a8323d37a98a73608f9ae71b19&amp;language=es-ES</string>
+    <string name="images_base_url">https://image.tmdb.org/t/p/w500</string>
+
+    <string name="LoremIpsum">Description of the movie. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas varius urna felis, sit amet pellentesque metus ultricies eu. Etiam vitae suscipit nulla. Curabitur aliquet ultrices ligula et elementum. Praesent gravida gravida aliquet. Praesent varius aliquet consectetur. Quisque vitae justo enim. Phasellus at leo a ex ornare finibus. Nam venenatis molestie tellus, at rhoncus est posuere in. Cras pulvinar et elit vel interdum. Nulla vitae rutrum odio, et posuere nibh.</string>
+
+    <!--> FRAGMENT MOVIE LIST <!-->
+    <string name="tvFragmentMovieList">Películas Populares</string>
+
 </resources>
