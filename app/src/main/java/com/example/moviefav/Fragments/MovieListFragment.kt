@@ -1,23 +1,32 @@
 package com.example.moviefav.Fragments
 
+import android.content.DialogInterface
+import android.graphics.Color
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.SearchView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moviefav.Classes.*
-import com.example.moviefav.MainActivity
 import com.example.moviefav.R
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.*
 
 class MovieListFragment : Fragment()
 {
+    lateinit var rvMovieList : RecyclerView
+
+    var totalPages = 0
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -31,55 +40,82 @@ class MovieListFragment : Fragment()
     {
         super.onViewCreated(view, savedInstanceState)
 
-        val rvMovieList     = view.findViewById<RecyclerView>(R.id.rvMovieListFragment)
-
-        val btNext          = view.findViewById<LinearLayout>(R.id.btNextPage)
-        val btPrev          = view.findViewById<LinearLayout>(R.id.btPrevPage)
+        val searchView      = view.findViewById<SearchView>(R.id.searchViewMovieListFragment)
+        rvMovieList         = view.findViewById<RecyclerView>(R.id.rvMovieListFragment)
+        val btNext          = view.findViewById<LinearLayout>(R.id.btNextPageMovieListFragment)
+        val btPrev          = view.findViewById<LinearLayout>(R.id.btPrevPageMovieListFragment)
 
         var pageNum = 1
+        var isSearching = false
 
-        rvMovieList.layoutManager = LinearLayoutManager(context)
-        rvMovieList.setHasFixedSize(true)
-        getMoviesData(pageNum) { movies : List<Movie> ->
-            rvMovieList.adapter = MovieListItemAdapter(movies)
-        }
+        searchView.isIconifiedByDefault = false
 
-        btNext.setOnClickListener {
-            if (pageNum > 0)
+        loadPopularMoviesPage(pageNum)
+
+        searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean
             {
-                rvMovieList.layoutManager = LinearLayoutManager(context)
-                rvMovieList.setHasFixedSize(true)
-                getMoviesData(++pageNum) { movies : List<Movie> ->
-                    rvMovieList.adapter = MovieListItemAdapter(movies)
-                }
+                return true
             }
-        }
+
+            override fun onQueryTextChange(newText: String?): Boolean
+            {
+                val searchText = newText!!.lowercase(Locale.getDefault())
+
+                if (searchText.isNotEmpty())
+                {
+                    isSearching = true
+                    loadSearchMoviesPage(1, searchText)
+                }
+                else
+                {
+                    isSearching = false
+                    pageNum = 1
+                    loadPopularMoviesPage(pageNum)
+                }
+
+                return true
+            }
+        })
 
         btPrev.setOnClickListener {
-            if (pageNum > 1)
+            if (!isSearching)
             {
-                rvMovieList.layoutManager = LinearLayoutManager(context)
-                rvMovieList.setHasFixedSize(true)
-                getMoviesData(--pageNum) { movies : List<Movie> ->
-                    rvMovieList.adapter = MovieListItemAdapter(movies)
-                }
+                if (pageNum > 1) { loadPopularMoviesPage(--pageNum) }
+                else { Toast.makeText(context, "Ya estás en la primera página", Toast.LENGTH_SHORT).show() }
             }
             else
             {
-                Toast.makeText(context, "Ya estás en la primera página", Toast.LENGTH_SHORT).show()
+                if (pageNum > 1) { loadSearchMoviesPage(--pageNum, searchView.query.toString()) }
+                else { Toast.makeText(context, "Ya estás en la primera página", Toast.LENGTH_SHORT).show() }
+            }
+
+        }
+
+        btNext.setOnClickListener {
+            if (!isSearching)
+            {
+                if (pageNum < totalPages) { loadPopularMoviesPage(++pageNum) }
+                else { Toast.makeText(context, "Ya estás en la última página", Toast.LENGTH_SHORT).show() }
+            }
+            else
+            {
+                if (pageNum < totalPages) { loadSearchMoviesPage(++pageNum, searchView.query.toString()) }
+                else { Toast.makeText(context, "Ya estás en la última página", Toast.LENGTH_SHORT).show() }
             }
         }
+
     }
 
-    fun getMoviesData(pageNum : Int, callback: (List<Movie>) -> Unit)
+    fun getAllMoviesData(pageNum : Int, callback: (List<Movie>, Int) -> Unit)
     {
-        val apiService = MovieApiService.getInstance().create(MovieApiInterface::class.java)
+        val apiService = MovieApiService.getInstance().create(PopularMoviesApiInterface::class.java)
 
         apiService.getMovieList(pageNum).enqueue(object : Callback<MovieResponse>
         {
             override fun onResponse(call: Call<MovieResponse>, response: Response<MovieResponse>)
             {
-                return callback(response.body()!!.movieList)
+                return callback(response.body()!!.movieList, response.body()!!.totalPages)
             }
 
             override fun onFailure(call: Call<MovieResponse>, t: Throwable)
@@ -87,5 +123,87 @@ class MovieListFragment : Fragment()
                 Toast.makeText(context, "Error when trying to load movie list", Toast.LENGTH_LONG).show()
             }
         })
+    }
+
+    fun getSearchMoviesData(pageNum : Int, query: String, callback: (List<Movie>, totalPages: Int) -> Unit)
+    {
+        val apiService = MovieApiService.getInstance().create(SearchMoviesApiInterface::class.java)
+
+        apiService.getMovieList(pageNum, query).enqueue(object : Callback<MovieResponse>
+        {
+            override fun onResponse(call: Call<MovieResponse>, response: Response<MovieResponse>)
+            {
+                return callback(response.body()!!.movieList, response.body()!!.totalPages)
+            }
+
+            override fun onFailure(call: Call<MovieResponse>, t: Throwable)
+            {
+                Toast.makeText(context, "Error when trying to load movie list", Toast.LENGTH_LONG).show()
+            }
+        })
+    }
+
+    fun loadPopularMoviesPage(pageNum: Int)
+    {
+        rvMovieList.layoutManager = LinearLayoutManager(context)
+        rvMovieList.setHasFixedSize(true)
+        getAllMoviesData(pageNum) { movies: List<Movie>, totalPages: Int ->
+            var adapter = MovieListItemAdapter(movies)
+            this.totalPages = totalPages
+
+            rvMovieList.adapter = adapter
+
+            adapter.setOnItemClickListener(object : MovieListItemAdapter.onItemClickListener
+            {
+                override fun onItemClick(position: Int)
+                {
+                    var actualMovie = movies.get(position)
+
+                    openDialog(actualMovie.title)
+                }
+            })
+        }
+    }
+
+    fun loadSearchMoviesPage(pageNum: Int, query: String)
+    {
+        rvMovieList.layoutManager = LinearLayoutManager(context)
+        rvMovieList.setHasFixedSize(true)
+        getSearchMoviesData(pageNum, query) { movies: List<Movie>, totalPages: Int ->
+            this.totalPages = totalPages
+
+            var adapter = MovieListItemAdapter(movies)
+
+            rvMovieList.adapter = adapter
+
+            adapter.setOnItemClickListener(object : MovieListItemAdapter.onItemClickListener
+            {
+                override fun onItemClick(position: Int)
+                {
+                    var actualMovie = movies.get(position)
+
+                    openDialog(actualMovie.title)
+                }
+            })
+        }
+    }
+
+    fun openDialog(title: String)
+    {
+        val dialogBuilder = AlertDialog.Builder(requireContext())
+        dialogBuilder.setTitle("Añadir a Favoritos")
+        dialogBuilder.setMessage("¿Deseas añadir a favoritos la película " + title + "?")
+
+        dialogBuilder.setPositiveButton("Sí", DialogInterface.OnClickListener {
+                dialog, id ->
+            Toast.makeText(context, "Añadida a favoritos: " + title, Toast.LENGTH_LONG).show()
+        })
+
+        dialogBuilder.setNegativeButton("Cancelar", DialogInterface.OnClickListener {
+                dialog, id -> dialog.cancel()
+        })
+
+        val alert = dialogBuilder.create()
+        alert.show()
     }
 }

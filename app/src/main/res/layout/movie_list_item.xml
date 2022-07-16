@@ -57,7 +57,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/white"
-                    android:text="4.5"
+                    android:text="0"
                     android:fontFamily="@font/nunito_semibold"
                     android:textSize="20dp"
                     />
@@ -70,7 +70,7 @@
                     android:ellipsize="end"
                     android:fontFamily="@font/nunito_light"
                     android:maxLines="4"
-                    android:text="@string/LoremIpsum"
+                    android:text=""
                     android:textColor="@color/white"
                     android:textSize="16dp"
                     android:justificationMode="inter_word"
@@ -81,7 +81,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAlignment="textEnd"
-                    android:text="1 October, 2000"
+                    android:text=""
                     android:textColor="@color/mainYellow"
                     android:layout_marginTop="8dp"
                     />

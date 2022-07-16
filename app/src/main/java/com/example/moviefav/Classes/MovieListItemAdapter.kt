@@ -17,46 +17,77 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.coroutines.coroutineContext
 
-class MovieListItemAdapter(val movieList : List<Movie>) : RecyclerView.Adapter<MovieListItemAdapter.MovieViewHolder>()
+class MovieListItemAdapter(val movieList : List<Movie>?) : RecyclerView.Adapter<MovieListItemAdapter.MovieViewHolder>()
 {
+    private lateinit var mListener : onItemClickListener
+
+    interface onItemClickListener
+    {
+        fun onItemClick(position: Int)
+    }
+
+    fun setOnItemClickListener (listener: onItemClickListener)
+    {
+        mListener = listener
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MovieViewHolder
     {
         val itemView = LayoutInflater.from(parent.context).inflate(R.layout.movie_list_item, parent, false)
-        return MovieViewHolder(itemView)
+        return MovieViewHolder(itemView, mListener)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: MovieViewHolder, position: Int)
     {
-        val movie = movieList[position]
-        Picasso.get().load(Uri.parse( "https://image.tmdb.org/t/p/w500" + movie.poster)).into(holder.ivPoster)
-        holder.tvTitle.setText(movie.title)
-        holder.tvDescription.setText(movie.description)
-        holder.tvScore.setText("" + movie.score + " ⭐")
+        if (!movieList.isNullOrEmpty())
+        {
+            val movie = movieList[position]
+            Picasso.get().load(Uri.parse( "https://image.tmdb.org/t/p/w500" + movie.poster)).into(holder.ivPoster)
+            holder.tvTitle.setText(movie.title)
+            holder.tvDescription.setText(movie.description)
+            holder.tvScore.setText("" + movie.score + " ⭐")
 
-        val spanishLocale = Locale("es", "ES")
+            val spanishLocale = Locale("es", "ES")
 
-        val apiFormat       = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val spanishFormat   = DateTimeFormatter.ofPattern("d MMMM, yyyy", spanishLocale)
+            val apiFormat       = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            val spanishFormat   = DateTimeFormatter.ofPattern("d MMMM, yyyy", spanishLocale)
 
-        val date = LocalDate.parse(movie.relaseDate, apiFormat)
+            if (movie.relaseDate != null && movie.relaseDate != "")
+            {
+                val date = LocalDate.parse(movie.relaseDate, apiFormat)
 
-        val spanishDate = date.format(spanishFormat)
+                val spanishDate = date.format(spanishFormat)
 
-        holder.tvReleaseDate.setText(spanishDate.toString())
+                holder.tvReleaseDate.setText(spanishDate.toString())
+            }
+        }
     }
 
     override fun getItemCount(): Int
     {
-        return movieList.size
+        if (!movieList.isNullOrEmpty())
+        {
+            return movieList.size
+        }
+        else
+            return 0
     }
 
-    class MovieViewHolder(itemView : View): RecyclerView.ViewHolder(itemView)
+    class MovieViewHolder(itemView : View, listener: onItemClickListener): RecyclerView.ViewHolder(itemView)
     {
         val ivPoster        = itemView.findViewById<ImageView>(R.id.ivPosterMovieListItem)
         val tvTitle         = itemView.findViewById<TextView>(R.id.tvTitleMovieListItem)
         val tvDescription   = itemView.findViewById<TextView>(R.id.tvDescriptionMovieListItem)
         val tvScore         = itemView.findViewById<TextView>(R.id.tvScoreMovieListItem)
         val tvReleaseDate   = itemView.findViewById<TextView>(R.id.tvReleaseDateMovieListItem)
+
+        init
+        {
+            itemView.setOnClickListener {
+                listener.onItemClick(adapterPosition)
+            }
+        }
+
     }
 }

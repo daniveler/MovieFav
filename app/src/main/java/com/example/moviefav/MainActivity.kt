@@ -2,16 +2,8 @@ package com.example.moviefav
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Toast
 import androidx.viewpager2.widget.ViewPager2
-import com.example.moviefav.Classes.Movie
-import com.example.moviefav.Classes.MovieApiService
-import com.example.moviefav.Classes.MovieApiInterface
-import com.example.moviefav.Classes.MovieResponse
 import com.google.android.material.tabs.TabLayout
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class MainActivity : AppCompatActivity()
 {
