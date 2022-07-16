@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -30,20 +31,51 @@ class MovieListFragment : Fragment()
     {
         super.onViewCreated(view, savedInstanceState)
 
-        val rvMovieList = view.findViewById<RecyclerView>(R.id.rvMovieListFragment)
+        val rvMovieList     = view.findViewById<RecyclerView>(R.id.rvMovieListFragment)
+
+        val btNext          = view.findViewById<LinearLayout>(R.id.btNextPage)
+        val btPrev          = view.findViewById<LinearLayout>(R.id.btPrevPage)
+
+        var pageNum = 1
 
         rvMovieList.layoutManager = LinearLayoutManager(context)
         rvMovieList.setHasFixedSize(true)
-        getMoviesData { movies : List<Movie> ->
+        getMoviesData(pageNum) { movies : List<Movie> ->
             rvMovieList.adapter = MovieListItemAdapter(movies)
+        }
+
+        btNext.setOnClickListener {
+            if (pageNum > 0)
+            {
+                rvMovieList.layoutManager = LinearLayoutManager(context)
+                rvMovieList.setHasFixedSize(true)
+                getMoviesData(++pageNum) { movies : List<Movie> ->
+                    rvMovieList.adapter = MovieListItemAdapter(movies)
+                }
+            }
+        }
+
+        btPrev.setOnClickListener {
+            if (pageNum > 1)
+            {
+                rvMovieList.layoutManager = LinearLayoutManager(context)
+                rvMovieList.setHasFixedSize(true)
+                getMoviesData(--pageNum) { movies : List<Movie> ->
+                    rvMovieList.adapter = MovieListItemAdapter(movies)
+                }
+            }
+            else
+            {
+                Toast.makeText(context, "Ya estás en la primera página", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    public fun getMoviesData(callback: (List<Movie>) -> Unit)
+    fun getMoviesData(pageNum : Int, callback: (List<Movie>) -> Unit)
     {
         val apiService = MovieApiService.getInstance().create(MovieApiInterface::class.java)
 
-        apiService.getMovieList().enqueue(object : Callback<MovieResponse>
+        apiService.getMovieList(pageNum).enqueue(object : Callback<MovieResponse>
         {
             override fun onResponse(call: Call<MovieResponse>, response: Response<MovieResponse>)
             {
@@ -54,7 +86,6 @@ class MovieListFragment : Fragment()
             {
                 Toast.makeText(context, "Error when trying to load movie list", Toast.LENGTH_LONG).show()
             }
-
         })
     }
 }
