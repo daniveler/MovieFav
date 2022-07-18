@@ -73,7 +73,6 @@
                     android:text=""
                     android:textColor="@color/white"
                     android:textSize="16dp"
-                    android:justificationMode="inter_word"
                     />
 
                 <TextView

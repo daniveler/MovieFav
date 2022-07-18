@@ -1,21 +1,27 @@
 package com.example.moviefav.Fragments
 
 import android.content.DialogInterface
-import android.graphics.Color
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.SearchView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.moviefav.Adapters.MovieListItemAdapter
 import com.example.moviefav.Classes.*
 import com.example.moviefav.R
+import com.example.moviefav.Retrofit.MovieApiService
+import com.example.moviefav.Retrofit.MovieResponse
+import com.example.moviefav.Retrofit.PopularMoviesApiInterface
+import com.example.moviefav.Retrofit.SearchMoviesApiInterface
+import com.example.moviefav.RoomDB.MovieDB
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -24,6 +30,7 @@ import java.util.*
 class MovieListFragment : Fragment()
 {
     lateinit var rvMovieList : RecyclerView
+    lateinit var db : MovieDB
 
     var totalPages = 0
 
@@ -107,6 +114,13 @@ class MovieListFragment : Fragment()
 
     }
 
+    override fun onResume()
+    {
+        super.onResume()
+
+        loadPopularMoviesPage(1)
+    }
+
     fun getAllMoviesData(pageNum : Int, callback: (List<Movie>, Int) -> Unit)
     {
         val apiService = MovieApiService.getInstance().create(PopularMoviesApiInterface::class.java)
@@ -120,7 +134,7 @@ class MovieListFragment : Fragment()
 
             override fun onFailure(call: Call<MovieResponse>, t: Throwable)
             {
-                Toast.makeText(context, "Error when trying to load movie list", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Error al cargar la lista de películas. Comprueba tu conexión a internet", Toast.LENGTH_LONG).show()
             }
         })
     }
@@ -138,7 +152,7 @@ class MovieListFragment : Fragment()
 
             override fun onFailure(call: Call<MovieResponse>, t: Throwable)
             {
-                Toast.makeText(context, "Error when trying to load movie list", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Error al cargar la lista de películas. Comprueba tu conexión a internet", Toast.LENGTH_LONG).show()
             }
         })
     }
@@ -159,7 +173,7 @@ class MovieListFragment : Fragment()
                 {
                     var actualMovie = movies.get(position)
 
-                    openDialog(actualMovie.title)
+                    openDialog(actualMovie)
                 }
             })
         }
@@ -182,21 +196,35 @@ class MovieListFragment : Fragment()
                 {
                     var actualMovie = movies.get(position)
 
-                    openDialog(actualMovie.title)
+                    openDialog(actualMovie)
                 }
             })
         }
     }
 
-    fun openDialog(title: String)
+    fun openDialog(movie: Movie)
     {
+        db = MovieDB.getDatabase(requireActivity().applicationContext)
+
         val dialogBuilder = AlertDialog.Builder(requireContext())
         dialogBuilder.setTitle("Añadir a Favoritos")
-        dialogBuilder.setMessage("¿Deseas añadir a favoritos la película " + title + "?")
+        dialogBuilder.setMessage("¿Deseas añadir a favoritos la película " + movie.title + "?")
 
         dialogBuilder.setPositiveButton("Sí", DialogInterface.OnClickListener {
-                dialog, id ->
-            Toast.makeText(context, "Añadida a favoritos: " + title, Toast.LENGTH_LONG).show()
+            dialog, id ->
+                lifecycleScope.launch {
+                    var favoritesList = db.getMovieDao().getAll()
+
+                    if (!favoritesList.contains(movie))
+                    {
+                        db.getMovieDao().insert(movie)
+                        Toast.makeText(context, "Añadida a favoritos: " + movie.title, Toast.LENGTH_LONG).show()
+                    }
+                    else
+                    {
+                        Toast.makeText(context, movie.title + " ya está añadida a favoritos", Toast.LENGTH_LONG).show()
+                    }
+                }
         })
 
         dialogBuilder.setNegativeButton("Cancelar", DialogInterface.OnClickListener {
